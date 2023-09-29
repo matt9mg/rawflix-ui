@@ -3,42 +3,91 @@
 import Input from "@/components/input";
 import {useCallback, useEffect, useRef, useState} from "react";
 import Select from "@/components/select";
-import objectsToSelectOptions from "@/lib/helpers";
+import {api, objectsToSelectOptions, setJWTToken} from "@/lib/helpers";
+import Error from "@/components/error";
+import SuccessMessage from "@/components/success";
+import * as Routes from "@/lib/routes"
+import * as HTTP_CODES from "@/lib/http_codes"
+import { useRouter } from 'next/navigation'
 
 interface RegisterFieldData {
     countries: [index: string, string];
     genders: [index: string, string]
 }
 
+interface FormErrors {
+    username?: string;
+    password?: string;
+    gender?: string;
+    country?: string;
+    general_errors?: string;
+}
+
 const Auth = () => {
+    const router = useRouter()
     const username = useRef()
     const countries = useRef()
     const genders = useRef()
     const password = useRef()
     const [variant, setVariant] = useState("login")
     const toggleVariant = useCallback(() => {
+        setFormErrors(null)
         setVariant(currentVariant => {
             return currentVariant === "login" ? "register" : "login"
         })
     }, [])
+    const [FormErrors, setFormErrors] = useState<FormErrors | null>(null)
     const [registerData, setRegisterData] = useState<RegisterFieldData | null>(null)
+    const [successMessage, setSuccessMessage] = useState("")
 
     useEffect(() => {
-        const getRegisterData = async () => {
-            const fetchData = await fetch("http://127.0.0.1:3002/register-field-data").then(res => {
-                return res.json()
-            })
-            setRegisterData(fetchData)
-        }
-
-        getRegisterData()
+        api(Routes.registerData).then((resp: any) => {
+            setRegisterData(resp.data)
+        })
     }, [])
 
     const login = () => {
-        fetch("http://127.0.0.1:3002").then(response => {
-            response.json().then(data => {
-                console.log(response.status, data)
-            })
+        api({
+            ...Routes.login, ...{
+                body: {
+                    // @ts-ignore
+                    username: username.current?.value,
+                    // @ts-ignore
+                    password: password.current?.value,
+                }
+            }
+        }).then(resp => {
+            if (resp.status != HTTP_CODES.HTTP_OK) {
+                setFormErrors(resp.data)
+                return
+            }
+
+            setJWTToken(resp.data)
+            router.push("/")
+        })
+    }
+
+    const register = () => {
+        api({
+            ...Routes.register, ...{
+                body: {
+                    // @ts-ignore
+                    username: username.current?.value,
+                    // @ts-ignore
+                    password: password.current?.value,
+                    // @ts-ignore
+                    country: countries.current?.value,
+                    // @ts-ignore
+                    gender: genders.current?.value
+                }
+            }
+        }).then(resp => {
+            if (resp.status !== HTTP_CODES.HTTP_CREATED) {
+                setFormErrors(resp.data)
+            }
+
+            toggleVariant()
+            setSuccessMessage("you have been registered, login to enjoy your tailored experience")
         })
     }
 
@@ -54,7 +103,23 @@ const Auth = () => {
                         <h2 className="text-white text-4xl mb-8 font-semibold">
                             {variant === "login" ? "Sign in" : "Register"}
                         </h2>
+                        <SuccessMessage text={successMessage}/>
+                        <Error text={FormErrors?.general_errors}/>
                         <div className="flex flex-col gap-4">
+                            <Input
+                                forwardedRef={username}
+                                label="Username"
+                                id="username"
+                                type="username"
+                                error={FormErrors?.username}
+                            />
+                            <Input
+                                forwardedRef={password}
+                                label="Password"
+                                id="password"
+                                type="password"
+                                error={FormErrors?.password}
+                            />
                             {variant == "register" && (
                                 <Select
                                     forwardedRef={countries}
@@ -62,6 +127,8 @@ const Auth = () => {
                                     id="countries"
                                     name="countries"
                                     options={objectsToSelectOptions(registerData?.countries)}
+                                    placeholder="Choose a county"
+                                    error={FormErrors?.country}
                                 />
                             )}
                             {variant == "register" && (
@@ -71,22 +138,12 @@ const Auth = () => {
                                     id="genders"
                                     name="genders"
                                     options={objectsToSelectOptions(registerData?.genders)}
+                                    placeholder="Select a gender"
+                                    error={FormErrors?.gender}
                                 />
                             )}
-                            <Input
-                                forwardedRef={username}
-                                label="Username"
-                                id="username"
-                                type="username"
-                            />
-                            <Input
-                                forwardedRef={password}
-                                label="Password"
-                                id="password"
-                                type="password"
-                            />
                         </div>
-                        <button onClick={login}
+                        <button onClick={variant === "login" ? login : register}
                                 className="bg-red-600 py-3 text-white rounded-md w-full mt-10 hover:bg-red-700 transition">
                             {variant === "login" ? "Login" : "Register"}
                         </button>
