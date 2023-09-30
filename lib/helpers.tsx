@@ -1,10 +1,9 @@
-import { setCookie, getCookie } from 'cookies-next';
+import { setCookie, getCookie, deleteCookie } from 'cookies-next';
 
 interface apiProps {
     path: string;
     method: string,
     body?: object
-    setToken?: boolean
 }
 
 export const api = async (props: apiProps) => {
@@ -12,8 +11,10 @@ export const api = async (props: apiProps) => {
         "content-type": "application/json",
     }
 
-    if (props.setToken) {
-        const jwtHeader = {"x-jwt-token": getJWTToken()}
+    const token = getJWTToken()
+
+    if (token) {
+        const jwtHeader = {"x-jwt-token": token}
         headers = {...headers, ...jwtHeader}
     }
 
@@ -61,4 +62,8 @@ export const setJWTToken = (token: string) => {
 
 export const getJWTToken = () => {
     return getCookie(JWT_TOKEN)
+}
+
+export const deleteJWTToken = () => {
+    return deleteCookie(JWT_TOKEN)
 }

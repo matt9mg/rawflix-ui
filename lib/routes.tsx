@@ -12,3 +12,8 @@ export const login = {
     path: "/login",
     method: "POST"
 }
+
+export const logout = {
+    path: "/logout",
+    method: "POST"
+}

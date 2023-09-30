@@ -20,7 +20,7 @@ interface FormErrors {
     password?: string;
     gender?: string;
     country?: string;
-    general_errors?: string;
+    general_error?: string;
 }
 
 const Auth = () => {
@@ -84,6 +84,7 @@ const Auth = () => {
         }).then(resp => {
             if (resp.status !== HTTP_CODES.HTTP_CREATED) {
                 setFormErrors(resp.data)
+                return
             }
 
             toggleVariant()
@@ -104,7 +105,7 @@ const Auth = () => {
                             {variant === "login" ? "Sign in" : "Register"}
                         </h2>
                         <SuccessMessage text={successMessage}/>
-                        <Error text={FormErrors?.general_errors}/>
+                        <Error text={FormErrors?.general_error}/>
                         <div className="flex flex-col gap-4">
                             <Input
                                 forwardedRef={username}
