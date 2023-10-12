@@ -16,7 +16,7 @@ const AccountMenu: React.FC<AccountMenuProps> = ({visible}) => {
         })
     }
 
-    if (visible) {
+    if (!visible) {
         return null
     }
 
@@ -29,8 +29,9 @@ const AccountMenu: React.FC<AccountMenuProps> = ({visible}) => {
                         Username
                     </p>
                 </div>
-                <div className="px-3 group/item flex flex-row gap-3 items-center w-full">
-                    <p onClick={logout} className="text-white text-sm group-hover/item:underline">Logout</p>
+                <hr className="bg-gray-600 border-0 h-px my-4" />
+                <div onClick={logout} className="px-3 text-center text-white text-sm hover:underline">
+                    Sign out of RawFlix
                 </div>
             </div>
         </div>

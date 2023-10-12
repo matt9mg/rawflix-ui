@@ -17,3 +17,9 @@ export const logout = {
     path: "/logout",
     method: "POST"
 }
+
+export const home = {
+    path: "/home",
+    method: "GET",
+
+}
